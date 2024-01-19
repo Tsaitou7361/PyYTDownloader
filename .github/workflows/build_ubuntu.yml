@@ -17,6 +17,4 @@ jobs:
         uses: sayyid5416/pyinstaller@v1
         with:
           python_ver: '3.10'
-          spec: 'main.py'
-          upload_exe_with_name: 'PyYTDownloader'
-          options: --onefile, --name "PyYTDownloader", --windowed,
+          spec: 'main.spec'
