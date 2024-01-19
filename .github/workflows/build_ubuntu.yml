@@ -18,3 +18,4 @@ jobs:
         with:
           python_ver: '3.10'
           spec: 'main.spec'
+          upload_exe_with_name: 'PyYTDownloader'
