@@ -36,7 +36,7 @@ class user_experience():
 
 user_experience().personalize()
 
-working_path = f"{os.path.expanduser('~')}/Videos/PyYTDownloader"
+working_path = f"{os.path.expanduser('~')}/Videos/PyYTDownload"
 if not os.path.exists(working_path):
     os.mkdir(working_path)
 os.chdir(working_path)
