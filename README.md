@@ -9,5 +9,12 @@
 - MacOS and Linux
   * in `/home/username/Videos/PyYTDownload`
 
+### I forked, how to start develop and build?
+- Install Dependencies
+  * Windows: run command `pip install -r requirements-windows.txt`
+  * Mac or Linux: run command `pip install -r requirements-linux.txt`
+- Build
+  * run command `python setup.py build`
+
 ### Characteristic
-- Multi System supported.
+- Cross platform.
