@@ -23,4 +23,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements-linux.txt
       - name: Build executable
-        run: python setup.py build
+        uses: sayyid5416/pyinstaller@v1
+        with:
+          spec: 'main.spec'
+          upload_exe_with_name: 'PyYTDownloader'
