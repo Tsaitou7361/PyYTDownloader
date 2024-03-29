@@ -1,4 +1,2 @@
 pytube >= 15.0.0
 PySimpleGUI >= 4.60.5
-darkdetect >= 0.8.0
-PySimpleGUIWx >= 0.17.2
