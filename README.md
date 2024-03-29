@@ -1,20 +1,23 @@
 # PyYTDownloader by Tsaitou7361
 ### functions
-- Download `mp4` by a YouTube link
-- Download `mp3` by a YouTube link
+Download YouTube videos by `mp4`, `mp3`, `wav`
 
 ### where is the stuff I downloaded?
 - Windows
-  * in `C:\Users\username\Videos\PyYTDownload`
+  * Videos are in `C:\Users\username\Videos\PyYTDownload`
+  * Musics are in `C:\Users\username\Music\PyYTDownload`
 - MacOS and Linux
-  * in `/home/username/Videos/PyYTDownload`
+  * Videos are in `/home/username/Videos/PyYTDownload`
+  * Musics are in `/home/username/Music/PyYTDownload`
 
 ### I forked, how to start develop and build?
 - Install Dependencies
   * Windows: run command `pip install -r requirements-windows.txt`
   * Mac or Linux: run command `pip install -r requirements-linux.txt`
 - Build
-  * run command `python setup.py build`
+  * run command `pyinstaller main.spec`
 
 ### Characteristic
-- Cross platform.
+- Cross-platform.
+
+> Last updated on 2024/3/29
