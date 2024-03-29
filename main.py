@@ -1,99 +1,139 @@
-import ssl
 import os
-import platform, sys, darkdetect
+# import platform
+import pytube
+import PySimpleGUI as sg
+import random
+import re
+# import ssl
+import sys
 import threading
-from pytube import YouTube
+import time
+
+# ssl._create_default_https_content = ssl._create_stdlib_context
 
 
-ssl._create_default_https_content = ssl._create_stdlib_context
-
-# generate working path
-working_path = f'{os.path.expanduser("~")}/Videos/PyYTDownload'
-if not os.path.exists(working_path):
-    os.mkdir(working_path)
-os.chdir(working_path)
-
-class user_experience():
+class Downloader:
     def __init__(self):
-        self.sg = None
-        self._os = platform.system()
+        self._working_path = {
+            "a": f"{os.path.expanduser('~')}/Music/PyYTDownload",
+            "v": f"{os.path.expanduser('~')}/Videos/PyYTDownload"
+        }
+        self._latest = None
+        if not os.path.exists(self._working_path["a"]):
+            os.mkdir(self._working_path["a"])
+        if not os.path.exists(self._working_path["v"]):
+            os.mkdir(self._working_path["v"])
 
-        if self._os == "Windows":
-            if sys.getwindowsversion().build >= 22000:
-                self._current_os = "Windows 11"
-        elif self._os == "Darwin":
-            self._current_os = "MacOS"
+    def dl(self, link: str, extension: str):
+        yt = pytube.YouTube(link)
+        title = re.sub(r"[/\\]", "-", yt.title)    # Fix filename issue
+        if extension == "mp3":
+            os.chdir(self._working_path["a"])
+            title = title + ".mp3"
+            yt.streams.filter(only_audio=True).first().download(filename=f"{title}")
+            self._latest = title
+        elif extension == "wav":
+            os.chdir(self._working_path["a"])
+            title = title + ".wav"
+            yt.streams.filter(only_audio=True).first().download(filename=f"{title}")
+            self._latest = title
         else:
-            self._current_os = self._os
+            os.chdir(self._working_path["v"])
+            title = title + ".mp4"
+            yt.streams.filter().get_highest_resolution().download(filename=f"{title}")
+            self._latest = title
 
-    def personalize(self):
-        if self._current_os == "Windows 11":
-            import PySimpleGUIWx as sg
-        else:
-            import PySimpleGUI as sg
-        self.sg = sg
+    def get(self):
+        return self._latest
 
-        darkmode = darkdetect.isDark()
-        if darkmode:
-            self.sg.theme("DarkGrey4")
-        else:
-            self.sg.theme("SystemDefaultForReal")
 
-    def get_sg(self):
-        return self.sg
+class UI:
+    def __init__(self):
+        sg.theme("SystemDefaultForReal")
+        self._font = ("Noto Sans TC", 10)
+        self._main_layout = None
+        self._progress = None
+        self._dl_layout = None
+        self.dl = None
+        self.window = None
+        self._link = None
+        self._extension = None
 
-class UI():
-    def __init__(self, sg):
-        self._sg = sg
-        self._layout = [
-            [sg.Text("Link"), sg.InputText(key="-link-")],
-            [sg.Text("Format"), sg.Combo(values=["mp4", "mp3"], default_value="mp4", key="-type-")],
-            [sg.Text()],
-            [sg.Button("Download")]
-        ]
-        self._window = None
-    def make_window(self):
-        self._window = self._sg.Window("PyYTDownloader", self._layout, finalize=True)
-        return self._window
+    def make_win(self, arg):
+        if arg == "main":
+            self._main_layout = [
+                [sg.Text("連結:", font=self._font),
+                 sg.InputText(key="-link-", font=self._font)],
+
+                [sg.Text("")],
+
+                [sg.Text("格式: ", font=self._font),
+                 sg.Combo(values=("mp4", "mp3", "wav"), font=self._font, default_value="mp4", key="-format-")],
+
+                [sg.Button("送出", font=self._font, key="-submit-")]
+            ]
+
+            self.window = sg.Window("PyYTDownloader", self._main_layout, finalize=True)
+            return self.window
+        elif arg == "dl":
+            self._progress = [
+                [sg.ProgressBar(100, orientation="h", size=(20, 20), key="-progress-")]
+            ]
+            self._dl_layout = [
+                [sg.Frame("進度", self._progress)],
+
+                [sg.Button("Start", key="-start-", font=self._font),
+                 sg.Button("Open", disabled=True, key="-open-", font=self._font),
+                 sg.Cancel()]
+            ]
+
+            self.dl = sg.Window("PyYTDownloader - 下載中", self._dl_layout, finalize=True)
+            return self.dl
 
     def mainloop(self):
-        sg = self._sg
-        window = self._window
+        window = self.window
         while True:
             event, value = window.read()
             if event == sg.WIN_CLOSED:
+                window.close()
+                sys.exit()
+            if event == "-submit-":
+                self._link = value["-link-"]
+                self._extension = value["-format-"]
+                self.make_win("dl")
+                self.subloop()
+                window.close()
+
+    def subloop(self):
+        window = self.dl
+        progressbar = window["-progress-"]
+        while True:
+            event, value = window.read()
+            if event == sg.WIN_CLOSED or event == "Cancel":
                 break
-            if event == "Download":
-                link = value["-link-"]
-                download_type = value["-type-"]
-                download(download_type, link)
-                sg.popup("Download Completed.")
-                window["-link-"].update("")
-        self._window.close()
-
-def download(type:str, link: str):
-    yt = YouTube(link)
-    print(f"[INFO] Download stream started. link: {link}, type: {type}")
-    if type == "mp4":
-        yt.streams.filter().get_highest_resolution().download()
-    elif type == "mp3":
-        yt.streams.filter().get_audio_only().download(filename=f"{yt.title}.mp3")
-    else:
-        print("[ERROR] Incorrect type")
-        sg.popup_error("請選擇一個可用的格式")
-    print("[INFO] Download completed")
-
+            if event == "-start-":
+                try:
+                    t = threading.Thread(target=downloader.dl, args=(self._link, self._extension))
+                    t.start()
+                    window["-start-"].update(disabled=True)
+                    for i in range(99):
+                        progressbar.update(i + 1)
+                        time.sleep(random.choice((.01, .02, .03, .04, .05, .06, .07, .08, .09, .1)))
+                except Exception as e:
+                    sg.popup_error(f"發生錯誤: {e}")
+                finally:
+                    progressbar.update(100)
+                    window["-open-"].update(disabled=False)
+            if event == "-open-":
+                os.startfile(downloader.get())
+                break
+        window.close()
+        self.make_win("main")
 
 
 if __name__ == "__main__":
-    user_exp = user_experience()
-    user_exp.personalize()
-    sg = user_exp.get_sg()
+    downloader = Downloader()
 
-    ui = UI(sg)
-    window = ui.make_window()
-
-    # mainloop = threading.Thread(target=ui.mainloop)
-    # mainloop.start()
-    # mainloop.join()
+    ui = UI()
+    ui.make_win("main")
     ui.mainloop()
