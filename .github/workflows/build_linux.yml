@@ -26,5 +26,5 @@ jobs:
       - name: Build executable
         uses: sayyid5416/pyinstaller@v1
         with:
-          spec: 'main.spec'
+          spec: 'linux.spec'
           upload_exe_with_name: 'PyYTDownloader'

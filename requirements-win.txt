@@ -1,0 +1,4 @@
+pytube >= 15.0.0
+PySimpleGUI >= 5.0.2
+PySimpleGUIWx >= 0.17.2
+yt-dlp >= 2024.3.30.232704.dev0
