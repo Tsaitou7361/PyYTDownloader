@@ -1,15 +1,42 @@
+import importlib
 import os
-# import platform
+import platform
 import pytube
-import PySimpleGUI as sg
+# import PySimpleGUI as sg
 import random
 import re
 # import ssl
 import sys
 import threading
 import time
+import yt_dlp
 
 # ssl._create_default_https_content = ssl._create_stdlib_context
+
+
+class System:
+    def __init__(self):
+        self._system = None
+
+    def detect(self):
+        if platform.system() == "Windows":
+            if sys.getwindowsversion().build >= 22000:
+                self._system = "Win11"
+            else:
+                self._system = "Win"
+    
+    def in_port(self):
+        if self._system == "Win11":
+            import PySimpleGUIWx as sg
+        else:
+            import PySimpleGUI as sg
+        return sg
+    
+    def version(self):
+        if importlib.util.find_spec("PySimpleGUIWx"):
+            return "wx"
+        else:
+            return "tk"
 
 
 class Downloader:
@@ -30,12 +57,13 @@ class Downloader:
         if extension == "mp3":
             os.chdir(self._working_path["a"])
             title = title + ".mp3"
-            yt.streams.filter(only_audio=True).first().download(filename=f"{title}")
+            yt.streams.filter(only_audio=True).first().download(filename=f"{title}.mp3")
             self._latest = title
-        elif extension == "wav":
+        elif extension == "webm":
             os.chdir(self._working_path["a"])
-            title = title + ".wav"
-            yt.streams.filter(only_audio=True).first().download(filename=f"{title}")
+            ytd = yt_dlp.YoutubeDL({"format": "251"})
+            v_dict = ytd.extract_info(link)
+            title = f"{v_dict.get('title', None)} [{v_dict.get('id', None)}].webm"
             self._latest = title
         else:
             os.chdir(self._working_path["v"])
@@ -68,7 +96,7 @@ class UI:
                 [sg.Text("")],
 
                 [sg.Text("格式: ", font=self._font),
-                 sg.Combo(values=("mp4", "mp3", "wav"), font=self._font, default_value="mp4", key="-format-")],
+                 sg.Combo(values=("mp4", "webm", "mp3"), font=self._font, default_value="mp4", key="-format-")],
 
                 [sg.Button("送出", font=self._font, key="-submit-")]
             ]
@@ -100,9 +128,11 @@ class UI:
             if event == "-submit-":
                 self._link = value["-link-"]
                 self._extension = value["-format-"]
-                self.make_win("dl")
-                self.subloop()
-                window.close()
+                break
+        window.close()
+        self.window = None
+        self.make_win("dl")
+        self.subloop()
 
     def subloop(self):
         window = self.dl
@@ -116,22 +146,30 @@ class UI:
                     t = threading.Thread(target=downloader.dl, args=(self._link, self._extension))
                     t.start()
                     window["-start-"].update(disabled=True)
-                    for i in range(99):
-                        progressbar.update(i + 1)
+                    progressbar.Update(0)
+                    for i in range(100):
+                        progressbar.UpdateBar(i + 1)
                         time.sleep(random.choice((.01, .02, .03, .04, .05, .06, .07, .08, .09, .1)))
                 except Exception as e:
                     sg.popup_error(f"發生錯誤: {e}")
-                finally:
+                else:
                     progressbar.update(100)
                     window["-open-"].update(disabled=False)
             if event == "-open-":
                 os.startfile(downloader.get())
                 break
         window.close()
+        self.dl = None
         self.make_win("main")
+        self.mainloop()
 
 
 if __name__ == "__main__":
+    system = System()
+    system.detect()
+    sg = system.in_port()
+    sg_ver = system.version()
+    
     downloader = Downloader()
 
     ui = UI()
