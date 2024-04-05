@@ -133,8 +133,8 @@ class Downloader:
 
 
 class UI:
-    def __init__(self, font):
-        sg.theme("SystemDefaultForReal")
+    def __init__(self, font, theme):
+        sg.theme(theme)
         self._font = font
         self._main_layout = None
         self._progress = None
@@ -252,6 +252,6 @@ if __name__ == "__main__":
     
     downloader = Downloader()
 
-    ui = UI(font)
+    ui = UI(font, theme)
     ui.make_win("main")
     ui.mainloop()
