@@ -40,9 +40,9 @@ class Config:
 
 class Lang:
     def __init__(self):
-        self._lang_file_en = ".\\lang\\en.json"
-        self._lang_file_zh_tw = ".\\lang\\zh_tw.json"
-        self._lang_file_zh_cn = ".\\lang\\zh_cn.json"
+        self._lang_file_en = "./lang/en.json"
+        self._lang_file_zh_tw = "./lang/zh_tw.json"
+        self._lang_file_zh_cn = "./lang/zh_cn.json"
         with open(self._lang_file_en, "r", encoding="utf-8") as f:
             self.lang_en = json.load(f)
             f.close()
