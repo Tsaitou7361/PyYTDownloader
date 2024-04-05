@@ -1,0 +1,14 @@
+{
+  "main.link": "链接地址",
+  "main.format": "格式",
+  "main.submit": "提交",
+  "error.occurred": "出错了",
+  "error.link.empty": "链接不可为空",
+  "error.format.empty": "格式不可为空",
+  "progress.progress": "进度",
+  "progress.start": "开始",
+  "progress.open": "打开",
+  "progress.cancel": "取消",
+  "progress.exit": "退出",
+  "progress.title": "PyYT下载器 - 正在下载"
+}

@@ -1,0 +1,14 @@
+{
+  "main.link": "連結",
+  "main.format": "格式",
+  "main.submit": "送出",
+  "error.occurred": "發生錯誤",
+  "error.link.empty": "連結不可為空",
+  "error.format.empty": "格式不可為空",
+  "progress.progress": "進度",
+  "progress.start": "開始",
+  "progress.open": "開啟",
+  "progress.cancel": "取消",
+  "progress.exit": "離開",
+  "progress.title": "PyYTDownloader - 正在下載"
+}
