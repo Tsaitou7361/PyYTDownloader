@@ -1,0 +1,14 @@
+{
+  "main.link": "Link",
+  "main.format": "Format",
+  "main.submit": "Submit",
+  "error.occurred": "An Error Occurred",
+  "error.link.empty": "Link cannot be empty",
+  "error.format.empty": "Format cannot be empty",
+  "progress.progress": "Progress",
+  "progress.start": "Start",
+  "progress.open": "Open",
+  "progress.cancel": "Cancel",
+  "progress.exit": "Exit",
+  "progress.title": "PyYTDownloader - Downloading"
+}
