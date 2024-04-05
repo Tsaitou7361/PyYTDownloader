@@ -1,4 +1,6 @@
+import configparser
 import importlib
+import json
 import os
 import platform
 import pytube
@@ -12,6 +14,54 @@ import time
 import yt_dlp
 
 # ssl._create_default_https_content = ssl._create_stdlib_context
+
+
+class Config:
+    def __init__(self):
+        self._config = configparser.ConfigParser()
+        self._configfile = "config.ini"
+        if not os.path.exists(self._configfile):
+            self._config.add_section("config")
+            self._config.set("config", "font", "Noto Sans TC")
+            self._config.set("config", "font-size", "10")
+            self._config.set("config", "theme", "SystemDefaultForReal")
+            self._config.set("config", "lang", "en")
+            with open(self._configfile, "w", encoding="utf-8") as f:
+                self._config.write(f)
+                f.close()
+        self._config.read(self._configfile)
+    
+    def get(self, option):
+        try:
+            return self._config.get("config", option)
+        except ValueError:
+            return None
+
+
+class Lang:
+    def __init__(self):
+        self._lang_file_en = ".\\lang\\en.json"
+        self._lang_file_zh_tw = ".\\lang\\zh_tw.json"
+        self._lang_file_zh_cn = ".\\lang\\zh_cn.json"
+        with open(self._lang_file_en, "r", encoding="utf-8") as f:
+            self.lang_en = json.load(f)
+            f.close()
+        with open(self._lang_file_zh_tw, "r", encoding="utf-8") as f:
+            self.lang_zh_tw = json.load(f)
+            f.close()
+        with open(self._lang_file_zh_cn, "r", encoding="utf-8") as f:
+            self._lang_zh_cn = json.load(f)
+            f.close()
+    
+    def get(self, option):
+        if option == "zh_tw":
+            return self.lang_zh_tw
+        elif option == "en":
+            return self.lang_en
+        elif option == "zh_cn":
+            return self._lang_zh_cn
+        else:
+            raise ValueError(f"The option: {option} is not supported")
 
 
 class System:
@@ -32,7 +82,8 @@ class System:
             import PySimpleGUI as sg
         return sg
     
-    def version(self):
+    @staticmethod
+    def version():
         if importlib.util.find_spec("PySimpleGUIWx"):
             return "wx"
         else:
@@ -65,6 +116,12 @@ class Downloader:
             v_dict = ytd.extract_info(link)
             title = f"{v_dict.get('title', None)} [{v_dict.get('id', None)}].webm"
             self._latest = title
+        elif extension == "m4a":
+            os.chdir(self._working_path["a"])
+            ytd = yt_dlp.YoutubeDL({"format": "140"})
+            v_dict = ytd.extract_info(link)
+            title = f"{v_dict.get('title', None)} [{v_dict.get('id', None)}].m4a"
+            self._latest = title
         else:
             os.chdir(self._working_path["v"])
             title = title + ".mp4"
@@ -76,9 +133,9 @@ class Downloader:
 
 
 class UI:
-    def __init__(self):
+    def __init__(self, font):
         sg.theme("SystemDefaultForReal")
-        self._font = ("Noto Sans TC", 10)
+        self._font = font
         self._main_layout = None
         self._progress = None
         self._dl_layout = None
@@ -90,32 +147,35 @@ class UI:
     def make_win(self, arg):
         if arg == "main":
             self._main_layout = [
-                [sg.Text("連結:", font=self._font),
+                [sg.Text(f"{lang['main.link']}:", font=self._font),
                  sg.InputText(key="-link-", font=self._font)],
 
                 [sg.Text("")],
 
-                [sg.Text("格式: ", font=self._font),
-                 sg.Combo(values=("mp4", "webm", "mp3"), font=self._font, default_value="mp4", key="-format-")],
+                [sg.Text(f"{lang['main.format']}: ", font=self._font),
+                 sg.Combo(values=("mp4", "webm", "m4a", "mp3"), font=self._font, default_value="mp4", key="-format-")],
 
-                [sg.Button("送出", font=self._font, key="-submit-")]
+                [sg.Button(lang['main.submit'], font=self._font, key="-submit-")]
             ]
 
-            self.window = sg.Window("PyYTDownloader", self._main_layout, finalize=True)
+            self.window = sg.Window("PyYTDownloader", self._main_layout, finalize=True, icon="youtube.png")
             return self.window
         elif arg == "dl":
             self._progress = [
                 [sg.ProgressBar(100, orientation="h", size=(20, 20), key="-progress-")]
             ]
             self._dl_layout = [
-                [sg.Frame("進度", self._progress)],
+                [sg.Frame(lang['progress.progress'], self._progress)],
 
-                [sg.Button("Start", key="-start-", font=self._font),
-                 sg.Button("Open", disabled=True, key="-open-", font=self._font),
-                 sg.Cancel()]
+                [sg.Button(lang['progress.start'], key="-start-", font=self._font),
+                 sg.Button(lang['progress.open'], disabled=True, key="-open-", font=self._font),
+                 sg.Cancel(lang['progress.cancel'], key="-cancel-", font=self._font)]
             ]
 
-            self.dl = sg.Window("PyYTDownloader - 下載中", self._dl_layout, finalize=True)
+            self.dl = sg.Window(lang['progress.title'],
+                                self._dl_layout,
+                                finalize=True,
+                                icon="youtube.png")
             return self.dl
 
     def mainloop(self):
@@ -128,7 +188,13 @@ class UI:
             if event == "-submit-":
                 self._link = value["-link-"]
                 self._extension = value["-format-"]
-                break
+                if self._link and self._extension:
+                    break
+                else:
+                    if not self._link:
+                        sg.popup(lang["error.link.empty"], button_color="#FFFFFF", font=font)
+                    elif not self._extension:
+                        sg.popup(lang["error.format.empty"], button_color="#FFFFFF", font=font)
         window.close()
         self.window = None
         self.make_win("dl")
@@ -151,13 +217,19 @@ class UI:
                         progressbar.UpdateBar(i + 1)
                         time.sleep(random.choice((.01, .02, .03, .04, .05, .06, .07, .08, .09, .1)))
                 except Exception as e:
-                    sg.popup_error(f"發生錯誤: {e}")
+                    progressbar.update(0)
+                    sg.popup(f"{lang['error.occurred']}\n{e}", font=font)
                 else:
                     progressbar.update(100)
                     window["-open-"].update(disabled=False)
+                    window["-cancel-"].update(lang["progress.exit"])
             if event == "-open-":
-                os.startfile(downloader.get())
-                break
+                try:
+                    os.startfile(downloader.get())
+                except TypeError as e:
+                    sg.popup(f"{lang['error.occurred']}\n{e}", font=font)
+                finally:
+                    break
         window.close()
         self.dl = None
         self.make_win("main")
@@ -170,8 +242,16 @@ if __name__ == "__main__":
     sg = system.in_port()
     sg_ver = system.version()
     
+    config = Config()
+    font = (str(config.get("font")), int(config.get("font-size")))
+    theme = config.get("theme")
+    current_lang = config.get("lang")
+    
+    lang = Lang()
+    lang = lang.get(current_lang)
+    
     downloader = Downloader()
 
-    ui = UI()
+    ui = UI(font)
     ui.make_win("main")
     ui.mainloop()
