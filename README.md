@@ -15,9 +15,10 @@ Download YouTube videos by `mp4`, `mp3`, `wav`
   * Windows: run command `pip install -r requirements-windows.txt`
   * Mac or Linux: run command `pip install -r requirements-linux.txt`
 - Build
-  * run command `pyinstaller main.spec`
+  * Windows: run command `pyinstaller win.spec`
+  * Mac or Linux: run command `pyinstaller linux.spec`
 
 ### Characteristic
 - Cross-platform.
 
-> Last updated on 2024/3/29
+> Last updated on 2024/4/5
